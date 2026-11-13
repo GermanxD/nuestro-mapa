@@ -68,8 +68,6 @@
     transition: transform .2s, background .2s;
   }
   .boton:hover { background: var(--azul); transform: translateY(-2px); }
-  .boton--claro { background: var(--blanco); color: var(--marino); }
-  .boton--claro:hover { background: var(--nube); }
 
   .abanico { position: relative; z-index: 1; height: min(62vh, 560px); }
   .abanico .polaroid { position: absolute; width: 46%; cursor: default; }
@@ -133,24 +131,6 @@
   .galeria .polaroid:hover { transform: rotate(0) translateY(-4px); }
   .galeria--una .polaroid { flex-basis: min(88%, 360px); }
 
-  /* Contador */
-  .contador { padding: 120px 20px; background: var(--nube); text-align: center; border-top: 1px solid var(--linea); }
-  .contador h2 { font-size: clamp(36px, 5vw, 60px); }
-  .cifras { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px; max-width: 900px; margin: 50px auto 0; }
-  .cifra { flex: 1 1 220px; padding: 34px 20px 28px; background: var(--blanco); border: 1px solid var(--linea); border-radius: 18px; }
-  .cifra strong { display: block; font-family: var(--titulos); font-weight: 600; font-size: 76px; line-height: 1; color: var(--azul); font-variant-numeric: lining-nums; }
-  .cifra span { display: block; margin-top: 8px; color: var(--tenue); font-size: 15px; }
-
-  /* Cierre */
-  .cierre { position: relative; padding: 130px 20px 120px; background: var(--marino); color: #dce9fa; text-align: center; overflow: hidden; }
-  .cierre .sobretitulo { color: var(--cielo); }
-  .cierre h2 { color: var(--blanco); font-size: clamp(44px, 7vw, 92px); }
-  .cierre h2 em { color: var(--cielo); font-weight: 500; }
-  .carta { max-width: 52ch; margin: 34px auto 40px; font-size: 19px; }
-  .carta p { margin: 0 0 18px; }
-  .firma { font-family: var(--mano); font-size: 32px; color: var(--blanco); }
-  #confeti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 900; }
-
   /* Visor */
   dialog.visor { padding: 0; border: 0; background: transparent; max-width: 94vw; max-height: 94vh; cursor: zoom-out; }
   dialog.visor::backdrop { background: rgba(12, 28, 56, .88); }
@@ -169,7 +149,6 @@
     .momento { min-height: 0; padding: 54px 0 30px; }
     .galeria { margin: 0 -16px; padding-inline: 16px; }
     .leaflet-control-zoom { display: none; }
-    .contador, .cierre { padding-block: 84px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -204,22 +183,8 @@
     </div>
     <div class="momentos" id="momentos"></div>
   </section>
-
-  <section class="contador">
-    <p class="sobretitulo">Y esto apenas empieza</p>
-    <h2>Lo que llevamos hasta hoy</h2>
-    <div class="cifras" id="cifras"></div>
-  </section>
-
-  <section class="cierre" id="cierre">
-    <p class="sobretitulo">Próximo destino</p>
-    <h2>Todo lo que <em>nos falta</em></h2>
-    <div class="carta" id="carta"></div>
-    <button class="boton boton--claro" id="celebrar" type="button">Celebrar otra vez</button>
-  </section>
 </main>
 
-<canvas id="confeti" aria-hidden="true"></canvas>
 <dialog class="visor" id="visor"><img alt=""></dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -230,14 +195,7 @@ const PAREJA = {
   nombre: "mi amor",
   edad: 25,
   cumple: "2026-11-13",
-  inicioNoviazgo: "2026-09-25",
   fotosPortada: ["IMG_2688", "IMG_4279", "IMG_3748"],
-  carta: [
-    "Gracias por cada café, cada flor y cada foto. Por los días tranquilos y por los que se volvieron fiesta.",
-    "Este mapa todavía tiene mucho espacio en blanco, y no se me ocurre a nadie mejor para llenarlo.",
-    "Feliz cumpleaños. Te amo.",
-  ],
-  firma: "Con todo mi amor",
 };
 
 // Fecha y coordenadas vienen de los metadatos de cada foto (hora local de Monterrey).
@@ -277,7 +235,6 @@ const rutaFoto = (nombre) => `fotos/${nombre}.jpg`;
 const aFecha = (iso) => new Date(iso + "T12:00:00");
 const fechaLarga = (iso) => aFecha(iso).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
 const fechaCorta = (iso) => aFecha(iso).toLocaleDateString("es-MX", { day: "numeric", month: "long" });
-const diasDesde = (iso) => Math.max(0, Math.floor((Date.now() - aFecha(iso).getTime()) / 86400000) + 1);
 
 function crearPolaroid(nombre, alt) {
   const boton = document.createElement("button");
@@ -288,20 +245,12 @@ function crearPolaroid(nombre, alt) {
   return boton;
 }
 
-/* ============ Portada, contador y cierre ============ */
+/* ============ Portada ============ */
 
 $("nombre").textContent = PAREJA.nombre;
 $("edad-fondo").textContent = PAREJA.edad;
 $("fecha-cumple").textContent = `${fechaLarga(PAREJA.cumple)} · ${PAREJA.edad} años`;
 PAREJA.fotosPortada.forEach((nombre) => $("abanico").append(crearPolaroid(nombre, "Nosotros")));
-
-const cifras = [
-  [PAREJA.edad, "años iluminando el mundo"],
-  [diasDesde(PAREJA.inicioNoviazgo), "días siendo tu novio"],
-  [diasDesde(MOMENTOS[0].fecha), "días desde nuestra primera foto"],
-];
-$("cifras").innerHTML = cifras.map(([numero, texto]) => `<div class="cifra"><strong>${numero}</strong><span>${texto}</span></div>`).join("");
-$("carta").innerHTML = PAREJA.carta.map((parrafo) => `<p>${parrafo}</p>`).join("") + `<p class="firma">${PAREJA.firma}</p>`;
 
 /* ============ Tarjetas de momentos ============ */
 
@@ -398,56 +347,6 @@ function abrirVisor(nombre, alt) {
   visor.showModal();
 }
 visor.addEventListener("click", () => visor.close());
-
-/* ============ Confeti ============ */
-
-const lienzo = $("confeti");
-const pincel = lienzo.getContext("2d");
-const COLORES_CONFETI = ["#ffffff", "#8fbdea", "#2f6fd0", "#cfe3f8", "#5c97e0"];
-let papelitos = [], animando = false;
-
-function lanzarConfeti() {
-  if (sinAnimacion) return;
-  lienzo.width = innerWidth * devicePixelRatio;
-  lienzo.height = innerHeight * devicePixelRatio;
-  pincel.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-  for (let i = 0; i < 160; i++) {
-    papelitos.push({
-      x: innerWidth / 2 + (Math.random() - .5) * innerWidth * .5,
-      y: innerHeight * .35,
-      vx: (Math.random() - .5) * 14,
-      vy: -Math.random() * 13 - 3,
-      lado: 5 + Math.random() * 7,
-      giro: Math.random() * Math.PI,
-      vgiro: (Math.random() - .5) * .3,
-      color: COLORES_CONFETI[i % COLORES_CONFETI.length],
-      redondo: i % 4 === 0,
-    });
-  }
-  if (!animando) { animando = true; requestAnimationFrame(dibujarConfeti); }
-}
-
-function dibujarConfeti() {
-  pincel.clearRect(0, 0, innerWidth, innerHeight);
-  papelitos = papelitos.filter((p) => p.y < innerHeight + 20);
-  for (const p of papelitos) {
-    p.vy += .28; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.giro += p.vgiro;
-    pincel.save();
-    pincel.translate(p.x, p.y);
-    pincel.rotate(p.giro);
-    pincel.fillStyle = p.color;
-    if (p.redondo) { pincel.beginPath(); pincel.arc(0, 0, p.lado / 2, 0, Math.PI * 2); pincel.fill(); }
-    else pincel.fillRect(-p.lado / 2, -p.lado / 4, p.lado, p.lado / 2);
-    pincel.restore();
-  }
-  if (papelitos.length) requestAnimationFrame(dibujarConfeti);
-  else animando = false;
-}
-
-$("celebrar").addEventListener("click", lanzarConfeti);
-new IntersectionObserver((entradas, obs) => {
-  if (entradas[0].isIntersecting) { lanzarConfeti(); obs.disconnect(); }
-}, { threshold: .45 }).observe($("cierre"));
 </script>
 </body>
 </html>
