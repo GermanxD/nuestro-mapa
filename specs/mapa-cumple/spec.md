@@ -22,7 +22,7 @@ Página de regalo por su cumpleaños 25 (13 de noviembre de 2026): un recorrido 
 - Momentos en el mismo lugar: el pin activo queda encima.
 
 ## Criterios de aceptación
-- Los 12 momentos aparecen en orden cronológico con fecha local de Monterrey y pin en su coordenada real.
+- Los 15 momentos aparecen en orden cronológico con fecha local de Monterrey y pin en su coordenada real.
 - Al llegar a cada momento con scroll, el mapa se centra en su pin; tocar un pin lleva a su tarjeta.
 - Paleta blanca y azul; se ve bien a 375 px y en escritorio, sin scroll horizontal.
 - Nombre, títulos y frases se cambian en un solo bloque de datos al inicio del script.

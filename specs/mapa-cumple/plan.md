@@ -12,4 +12,4 @@
 - Confeti y visor de fotos: implementados a mano con canvas y un `dialog`, sin librerías.
 
 ## Momentos (fecha local, agrupados por día y lugar)
-5 jul, 9 ago, 27 ago, 12 sep, 15 sep, 21 sep, 25 sep (inicio), 25 oct (café), 25 oct (Fundidora), 2 nov, 4 nov, 7 nov.
+5 jul, 9 ago, 27 ago, 12 sep, 15 sep, 21 sep, 25 sep (inicio), 25 oct (café), 25 oct (Fundidora), 27 oct, 2 nov, 4 nov, 7 nov (lectura), 7 nov, 8 nov.
