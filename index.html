@@ -83,6 +83,7 @@
   }
   .polaroid img, .polaroid video { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: var(--nube); }
   .polaroid--video { cursor: default; }
+  .polaroid--horizontal video { aspect-ratio: 16 / 9; }
 
   /* Recorrido */
   .entrada { padding: 110px 20px 70px; text-align: center; }
@@ -124,12 +125,13 @@
   .momento__fecha { margin: 2px 0 14px; font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--azul); }
   .momento--inicio .momento__num { color: var(--azul); }
 
-  .galeria { display: flex; gap: 18px; margin: 0 calc(-1 * clamp(20px, 4vw, 56px)); padding: 12px clamp(20px, 4vw, 56px) 34px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .galeria { display: flex; align-items: center; gap: 18px; margin: 0 calc(-1 * clamp(20px, 4vw, 56px)); padding: 12px clamp(20px, 4vw, 56px) 34px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
   .galeria::-webkit-scrollbar { display: none; }
   .galeria .polaroid { flex: 0 0 min(72%, 320px); scroll-snap-align: center; transition: transform .25s; }
   .galeria .polaroid:nth-child(odd) { transform: rotate(-1.6deg); }
   .galeria .polaroid:nth-child(even) { transform: rotate(1.4deg); }
   .galeria .polaroid:hover { transform: rotate(0) translateY(-4px); }
+  .galeria .polaroid--horizontal { flex-basis: min(92%, 460px); }
   .galeria--una .polaroid { flex-basis: min(88%, 360px); }
 
   /* Visor */
@@ -205,8 +207,8 @@ const MOMENTOS = [
     fotos: ["IMG_1892"] },
   { fecha: "2026-08-09", coords: [25.673003, -100.293878], titulo: "Con las montañas de fondo",
     fotos: ["IMG_2688", "IMG_2682"] },
-  { fecha: "2026-08-27", coords: [25.667300, -100.306616], titulo: "Café y pan dulce",
-    fotos: ["IMG_2955"] },
+  { fecha: "2026-08-29", coords: [25.930388, -100.363463], titulo: "Entre los árboles",
+    fotos: ["IMG_2981", "IMG_3086", "IMG_3094"], videos: ["IMG_2982"] },
   { fecha: "2026-09-12", coords: [25.676196, -100.324845], titulo: "Entre flores",
     fotos: ["IMG_3321", "IMG_3323"] },
   { fecha: "2026-09-15", coords: [25.674300, -100.352520], titulo: "Noche mexicana",
@@ -257,7 +259,12 @@ function crearPolaroid(nombre, alt) {
 function crearPolaroidDeVideo(nombre) {
   const marco = document.createElement("div");
   marco.className = "polaroid polaroid--video";
-  marco.innerHTML = `<video src="videos/${nombre}.mp4" poster="videos/${nombre}.jpg" controls playsinline preload="none"></video>`;
+  const poster = `videos/${nombre}.jpg`;
+  marco.innerHTML = `<video src="videos/${nombre}.mp4" poster="${poster}" controls playsinline preload="none"></video>`;
+  // Con preload="none" el video no informa su tamaño, así que la orientación se lee del póster.
+  const imagen = new Image();
+  imagen.onload = () => marco.classList.toggle("polaroid--horizontal", imagen.naturalWidth > imagen.naturalHeight);
+  imagen.src = poster;
   return marco;
 }
 
