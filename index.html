@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nuestro mapa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root {
+    --blanco: #ffffff;
+    --nube: #f3f8fe;
+    --linea: #d7e5f6;
+    --cielo: #8fbdea;
+    --azul: #2f6fd0;
+    --marino: #14315f;
+    --tinta: #1d2c47;
+    --tenue: #5d6f8c;
+    --titulos: "Cormorant Garamond", Georgia, serif;
+    --texto: "Nunito Sans", system-ui, sans-serif;
+    --mano: "Caveat", cursive;
+    --alto-mapa-movil: 40svh;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--blanco);
+    color: var(--tinta);
+    font-family: var(--texto);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { display: block; max-width: 100%; }
+  h1, h2, h3 { font-family: var(--titulos); font-weight: 600; color: var(--marino); line-height: 1.05; margin: 0; text-wrap: balance; }
+  .sobretitulo { font-size: 12.5px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--azul); margin: 0 0 14px; }
+
+  /* Portada */
+  .portada {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    align-items: center;
+    gap: 40px;
+    padding: 48px clamp(20px, 6vw, 96px);
+    background: radial-gradient(120% 90% at 85% 10%, #e3effc 0%, var(--nube) 40%, var(--blanco) 75%);
+    overflow: hidden;
+  }
+  .portada__edad {
+    position: absolute; right: -2vw; bottom: -12vw;
+    font-family: var(--titulos); font-weight: 600; font-size: 46vw; line-height: 1;
+    color: transparent; -webkit-text-stroke: 2px var(--linea);
+    user-select: none; pointer-events: none;
+  }
+  .portada__texto { position: relative; z-index: 1; }
+  .portada h1 { font-size: clamp(52px, 8.4vw, 124px); letter-spacing: -.015em; }
+  .portada h1 em { display: block; color: var(--azul); font-weight: 500; }
+  .portada .boton { margin-top: 34px; }
+  .boton {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 26px; border: 0; border-radius: 999px;
+    background: var(--marino); color: var(--blanco);
+    font: 700 15px var(--texto); letter-spacing: .03em; text-decoration: none; cursor: pointer;
+    transition: transform .2s, background .2s;
+  }
+  .boton:hover { background: var(--azul); transform: translateY(-2px); }
+  .boton--claro { background: var(--blanco); color: var(--marino); }
+  .boton--claro:hover { background: var(--nube); }
+
+  .abanico { position: relative; z-index: 1; height: min(62vh, 560px); }
+  .abanico .polaroid { position: absolute; width: 46%; cursor: default; }
+  .abanico .polaroid:nth-child(1) { left: 2%; top: 14%; transform: rotate(-8deg); }
+  .abanico .polaroid:nth-child(2) { right: 0; top: 4%; transform: rotate(7deg); }
+  .abanico .polaroid:nth-child(3) { left: 27%; top: 30%; width: 50%; transform: rotate(-1.5deg); z-index: 2; }
+
+  .polaroid {
+    display: block; margin: 0; padding: 10px 10px 40px; border: 0;
+    background: var(--blanco); border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(20, 49, 95, .12), 0 14px 34px rgba(20, 49, 95, .16);
+    font: inherit; text-align: center; cursor: zoom-in;
+  }
+  .polaroid img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: var(--nube); }
+
+  /* Recorrido */
+  .entrada { padding: 110px 20px 70px; text-align: center; }
+  .entrada h2 { font-size: clamp(38px, 5.4vw, 68px); }
+  .entrada p:last-child { max-width: 46ch; margin: 18px auto 0; color: var(--tenue); }
+
+  .recorrido { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); border-top: 1px solid var(--linea); }
+  .mapa-marco { position: sticky; top: 0; height: 100vh; order: 2; background: var(--nube); }
+  #mapa { position: absolute; inset: 0; background: var(--nube); }
+  .leaflet-tile-pane { filter: grayscale(1) sepia(.5) hue-rotate(175deg) saturate(1.7) brightness(1.06) contrast(.92); }
+  .leaflet-container { font-family: var(--texto); }
+  .mapa-aviso { position: absolute; inset: 0; display: none; place-items: center; padding: 30px; text-align: center; color: var(--tenue); }
+  .sin-mapa .mapa-aviso { display: grid; }
+  .mapa-etiqueta {
+    position: absolute; z-index: 500; left: 16px; bottom: 26px;
+    padding: 9px 16px; border-radius: 999px;
+    background: var(--blanco); color: var(--marino);
+    box-shadow: 0 6px 20px rgba(20, 49, 95, .18);
+    font-size: 14px; font-weight: 700;
+  }
+  .mapa-etiqueta b { color: var(--azul); margin-right: 6px; }
+
+  .pin {
+    display: grid; place-items: center; width: 32px; height: 32px;
+    border-radius: 50%; border: 2px solid var(--azul);
+    background: var(--blanco); color: var(--azul);
+    font: 700 13px var(--texto);
+    box-shadow: 0 3px 10px rgba(20, 49, 95, .25);
+    transition: transform .3s, background .3s, color .3s;
+  }
+  .pin--inicio { font-size: 15px; border-color: var(--marino); color: var(--marino); }
+  .activo > .pin { background: var(--azul); color: var(--blanco); transform: scale(1.35); }
+  .activo > .pin--inicio { background: var(--marino); }
+
+  .momentos { padding: 0 clamp(20px, 4vw, 56px); }
+  .momento { min-height: 92vh; display: flex; flex-direction: column; justify-content: center; padding: 60px 0; opacity: .35; transition: opacity .5s; }
+  .momento.activo { opacity: 1; }
+  .momento__num { font-family: var(--titulos); font-size: 20px; color: var(--cielo); letter-spacing: .08em; }
+  .momento__fecha { margin: 2px 0 14px; font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--azul); }
+  .momento--inicio .momento__num { color: var(--azul); }
+
+  .galeria { display: flex; gap: 18px; margin: 0 calc(-1 * clamp(20px, 4vw, 56px)); padding: 12px clamp(20px, 4vw, 56px) 34px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .galeria::-webkit-scrollbar { display: none; }
+  .galeria .polaroid { flex: 0 0 min(72%, 320px); scroll-snap-align: center; transition: transform .25s; }
+  .galeria .polaroid:nth-child(odd) { transform: rotate(-1.6deg); }
+  .galeria .polaroid:nth-child(even) { transform: rotate(1.4deg); }
+  .galeria .polaroid:hover { transform: rotate(0) translateY(-4px); }
+  .galeria--una .polaroid { flex-basis: min(88%, 360px); }
+
+  /* Contador */
+  .contador { padding: 120px 20px; background: var(--nube); text-align: center; border-top: 1px solid var(--linea); }
+  .contador h2 { font-size: clamp(36px, 5vw, 60px); }
+  .cifras { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px; max-width: 900px; margin: 50px auto 0; }
+  .cifra { flex: 1 1 220px; padding: 34px 20px 28px; background: var(--blanco); border: 1px solid var(--linea); border-radius: 18px; }
+  .cifra strong { display: block; font-family: var(--titulos); font-weight: 600; font-size: 76px; line-height: 1; color: var(--azul); font-variant-numeric: lining-nums; }
+  .cifra span { display: block; margin-top: 8px; color: var(--tenue); font-size: 15px; }
+
+  /* Cierre */
+  .cierre { position: relative; padding: 130px 20px 120px; background: var(--marino); color: #dce9fa; text-align: center; overflow: hidden; }
+  .cierre .sobretitulo { color: var(--cielo); }
+  .cierre h2 { color: var(--blanco); font-size: clamp(44px, 7vw, 92px); }
+  .cierre h2 em { color: var(--cielo); font-weight: 500; }
+  .carta { max-width: 52ch; margin: 34px auto 40px; font-size: 19px; }
+  .carta p { margin: 0 0 18px; }
+  .firma { font-family: var(--mano); font-size: 32px; color: var(--blanco); }
+  #confeti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 900; }
+
+  /* Visor */
+  dialog.visor { padding: 0; border: 0; background: transparent; max-width: 94vw; max-height: 94vh; cursor: zoom-out; }
+  dialog.visor::backdrop { background: rgba(12, 28, 56, .88); }
+  dialog.visor img { max-width: 94vw; max-height: 92vh; border: 8px solid var(--blanco); border-radius: 3px; }
+
+  @media (max-width: 860px) {
+    body { font-size: 16px; }
+    .portada { grid-template-columns: 1fr; gap: 10px; padding: 56px 16px 40px; text-align: center; }
+    .portada__edad { font-size: 78vw; bottom: auto; top: -6vw; right: -8vw; }
+    .abanico { height: 380px; max-width: 420px; width: 100%; margin: 0 auto; }
+    .entrada { padding: 80px 16px 50px; }
+    .recorrido { grid-template-columns: minmax(0, 1fr); }
+    .mapa-marco { order: 0; height: var(--alto-mapa-movil); z-index: 600; border-bottom: 1px solid var(--linea); box-shadow: 0 8px 24px rgba(20, 49, 95, .10); }
+    .mapa-etiqueta { left: 12px; bottom: 12px; font-size: 13px; }
+    .momentos { padding: 0 16px; }
+    .momento { min-height: 0; padding: 54px 0 30px; }
+    .galeria { margin: 0 -16px; padding-inline: 16px; }
+    .leaflet-control-zoom { display: none; }
+    .contador, .cierre { padding-block: 84px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="portada">
+  <div class="portada__edad" aria-hidden="true" id="edad-fondo"></div>
+  <div class="portada__texto">
+    <p class="sobretitulo" id="fecha-cumple"></p>
+    <h1>Feliz cumpleaños, <em id="nombre"></em></h1>
+    <a class="boton" href="#recorrido">Empezar el recorrido ↓</a>
+  </div>
+  <div class="abanico" id="abanico"></div>
+</header>
+
+<main>
+  <section class="entrada" id="recorrido">
+    <p class="sobretitulo">Nuestro mapa</p>
+    <h2>Cada pin es un día que no quiero olvidar</h2>
+    <p>Sigue bajando. El mapa te va a llevar a cada lugar, en el orden en que los vivimos.</p>
+  </section>
+
+  <section class="recorrido">
+    <div class="mapa-marco" id="mapa-marco">
+      <div id="mapa" aria-label="Mapa de nuestros momentos"></div>
+      <p class="mapa-aviso">El mapa necesita internet para cargar.<br>Las fotos siguen aquí abajo.</p>
+      <div class="mapa-etiqueta" id="mapa-etiqueta" hidden></div>
+    </div>
+    <div class="momentos" id="momentos"></div>
+  </section>
+
+  <section class="contador">
+    <p class="sobretitulo">Y esto apenas empieza</p>
+    <h2>Lo que llevamos hasta hoy</h2>
+    <div class="cifras" id="cifras"></div>
+  </section>
+
+  <section class="cierre" id="cierre">
+    <p class="sobretitulo">Próximo destino</p>
+    <h2>Todo lo que <em>nos falta</em></h2>
+    <div class="carta" id="carta"></div>
+    <button class="boton boton--claro" id="celebrar" type="button">Celebrar otra vez</button>
+  </section>
+</main>
+
+<canvas id="confeti" aria-hidden="true"></canvas>
+<dialog class="visor" id="visor"><img alt=""></dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ============ Textos y datos: todo lo editable vive aquí ============ */
+
+const PAREJA = {
+  nombre: "mi amor",
+  edad: 25,
+  cumple: "2026-11-13",
+  inicioNoviazgo: "2026-09-25",
+  fotosPortada: ["IMG_2688", "IMG_4279", "IMG_3748"],
+  carta: [
+    "Gracias por cada café, cada flor y cada foto. Por los días tranquilos y por los que se volvieron fiesta.",
+    "Este mapa todavía tiene mucho espacio en blanco, y no se me ocurre a nadie mejor para llenarlo.",
+    "Feliz cumpleaños. Te amo.",
+  ],
+  firma: "Con todo mi amor",
+};
+
+// Fecha y coordenadas vienen de los metadatos de cada foto (hora local de Monterrey).
+const MOMENTOS = [
+  { fecha: "2026-07-05", coords: [25.735358, -100.293900], titulo: "Una tarde en el pasto",
+    fotos: ["IMG_1892"] },
+  { fecha: "2026-08-09", coords: [25.673003, -100.293878], titulo: "Con las montañas de fondo",
+    fotos: ["IMG_2688", "IMG_2682"] },
+  { fecha: "2026-08-27", coords: [25.667300, -100.306616], titulo: "Café y pan dulce",
+    fotos: ["IMG_2955"] },
+  { fecha: "2026-09-12", coords: [25.676196, -100.324845], titulo: "Entre flores",
+    fotos: ["IMG_3321", "IMG_3323"] },
+  { fecha: "2026-09-15", coords: [25.674300, -100.352520], titulo: "Noche mexicana",
+    fotos: ["IMG_3516", "IMG_3471", "IMG_3538", "IMG_3523"] },
+  { fecha: "2026-09-21", coords: [25.680466, -100.282586], lugar: "Parque Fundidora", titulo: "Girasoles al atardecer",
+    fotos: ["IMG_3655"] },
+  { fecha: "2026-09-25", coords: [25.646611, -100.375646], inicio: true, titulo: "Donde empezó todo",
+    fotos: ["IMG_3748", "IMG_3742", "IMG_3736", "IMG_3746"] },
+  { fecha: "2026-10-25", coords: [25.676061, -100.324905], titulo: "Un mes y pan de muerto",
+    fotos: ["IMG_4104", "IMG_4063", "IMG_4086"] },
+  { fecha: "2026-10-25", coords: [25.681778, -100.281905], lugar: "Parque Fundidora", titulo: "Flores y un delfín",
+    fotos: ["IMG_4126", "IMG_4135"] },
+  { fecha: "2026-11-02", coords: [25.674758, -100.364945], titulo: "Dos perezosos",
+    fotos: ["IMG_4234"] },
+  { fecha: "2026-11-04", coords: [25.674495, -100.352828], titulo: "De gala",
+    fotos: ["IMG_4279", "IMG_4301", "IMG_4332"] },
+  { fecha: "2026-11-07", coords: [25.665933, -100.308266], titulo: "Tu sonrisa",
+    fotos: ["IMG_4427"] },
+];
+
+/* ============ Utilidades ============ */
+
+const $ = (id) => document.getElementById(id);
+const sinAnimacion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const esMovil = matchMedia("(max-width: 860px)");
+const rutaFoto = (nombre) => `fotos/${nombre}.jpg`;
+const aFecha = (iso) => new Date(iso + "T12:00:00");
+const fechaLarga = (iso) => aFecha(iso).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+const fechaCorta = (iso) => aFecha(iso).toLocaleDateString("es-MX", { day: "numeric", month: "long" });
+const diasDesde = (iso) => Math.max(0, Math.floor((Date.now() - aFecha(iso).getTime()) / 86400000) + 1);
+
+function crearPolaroid(nombre, alt) {
+  const boton = document.createElement("button");
+  boton.type = "button";
+  boton.className = "polaroid";
+  boton.innerHTML = `<img src="${rutaFoto(nombre)}" alt="${alt}" loading="lazy">`;
+  boton.addEventListener("click", () => abrirVisor(nombre, alt));
+  return boton;
+}
+
+/* ============ Portada, contador y cierre ============ */
+
+$("nombre").textContent = PAREJA.nombre;
+$("edad-fondo").textContent = PAREJA.edad;
+$("fecha-cumple").textContent = `${fechaLarga(PAREJA.cumple)} · ${PAREJA.edad} años`;
+PAREJA.fotosPortada.forEach((nombre) => $("abanico").append(crearPolaroid(nombre, "Nosotros")));
+
+const cifras = [
+  [PAREJA.edad, "años iluminando el mundo"],
+  [diasDesde(PAREJA.inicioNoviazgo), "días siendo tu novio"],
+  [diasDesde(MOMENTOS[0].fecha), "días desde nuestra primera foto"],
+];
+$("cifras").innerHTML = cifras.map(([numero, texto]) => `<div class="cifra"><strong>${numero}</strong><span>${texto}</span></div>`).join("");
+$("carta").innerHTML = PAREJA.carta.map((parrafo) => `<p>${parrafo}</p>`).join("") + `<p class="firma">${PAREJA.firma}</p>`;
+
+/* ============ Tarjetas de momentos ============ */
+
+const tarjetas = MOMENTOS.map((momento, i) => {
+  const tarjeta = document.createElement("article");
+  tarjeta.className = "momento" + (momento.inicio ? " momento--inicio" : "");
+  tarjeta.id = `momento-${i + 1}`;
+  const lugar = momento.lugar ? ` · ${momento.lugar}` : "";
+  tarjeta.innerHTML = `
+    <div class="momento__num">${momento.inicio ? "♥" : String(i + 1).padStart(2, "0")}</div>
+    <p class="momento__fecha">${fechaLarga(momento.fecha)}${lugar}</p>`;
+  const galeria = document.createElement("div");
+  galeria.className = "galeria" + (momento.fotos.length === 1 ? " galeria--una" : "");
+  momento.fotos.forEach((nombre) => galeria.append(crearPolaroid(nombre, momento.titulo)));
+  tarjeta.append(galeria);
+  $("momentos").append(tarjeta);
+  return tarjeta;
+});
+
+/* ============ Mapa ============ */
+
+let mapa = null, marcadores = [], rutaRecorrida = null;
+
+if (window.L) {
+  const coordenadas = MOMENTOS.map((m) => m.coords);
+  mapa = L.map("mapa", { scrollWheelZoom: false, dragging: !L.Browser.mobile, zoomSnap: 0.25 });
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(mapa);
+  mapa.fitBounds(coordenadas, { padding: [50, 50] });
+
+  L.polyline(coordenadas, { color: "#8fbdea", weight: 2, dashArray: "2 9", lineCap: "round" }).addTo(mapa);
+  rutaRecorrida = L.polyline([], { color: "#14315f", weight: 3, opacity: .85 }).addTo(mapa);
+
+  marcadores = MOMENTOS.map((momento, i) => {
+    const icono = L.divIcon({
+      className: "",
+      html: `<span class="pin${momento.inicio ? " pin--inicio" : ""}">${momento.inicio ? "♥" : i + 1}</span>`,
+      iconSize: [32, 32], iconAnchor: [16, 16],
+    });
+    return L.marker(momento.coords, { icon: icono, title: momento.titulo })
+      .addTo(mapa)
+      .on("click", () => tarjetas[i].scrollIntoView({ block: esMovil.matches ? "start" : "center" }));
+  });
+} else {
+  $("mapa-marco").classList.add("sin-mapa");
+}
+
+let activo = -1;
+
+function activarMomento(i) {
+  if (i === activo) return;
+  activo = i;
+  const momento = MOMENTOS[i];
+  tarjetas.forEach((tarjeta, j) => tarjeta.classList.toggle("activo", j === i));
+
+  const etiqueta = $("mapa-etiqueta");
+  etiqueta.hidden = false;
+  etiqueta.innerHTML = `<b>${momento.inicio ? "♥" : String(i + 1).padStart(2, "0")}</b>${fechaCorta(momento.fecha)}`;
+
+  if (!mapa) return;
+  marcadores.forEach((marcador, j) => {
+    marcador.getElement()?.classList.toggle("activo", j === i);
+    marcador.setZIndexOffset(j === i ? 1000 : 0);
+  });
+  rutaRecorrida.setLatLngs(MOMENTOS.slice(0, i + 1).map((m) => m.coords));
+  if (sinAnimacion) mapa.setView(momento.coords, 15);
+  else mapa.flyTo(momento.coords, 15, { duration: 1.4 });
+}
+
+// En celular el mapa tapa la parte de arriba, así que la franja que activa una tarjeta va más abajo.
+function observarTarjetas() {
+  const franja = esMovil.matches ? "-55% 0px -35% 0px" : "-45% 0px -45% 0px";
+  const observador = new IntersectionObserver((entradas) => {
+    entradas.forEach((entrada) => { if (entrada.isIntersecting) activarMomento(tarjetas.indexOf(entrada.target)); });
+  }, { rootMargin: franja });
+  tarjetas.forEach((tarjeta) => observador.observe(tarjeta));
+  return observador;
+}
+let observador = observarTarjetas();
+esMovil.addEventListener("change", () => { observador.disconnect(); observador = observarTarjetas(); mapa?.invalidateSize(); });
+
+// El scroll-margin evita que el mapa fijo tape el título al llegar desde un pin en celular.
+tarjetas.forEach((tarjeta) => { tarjeta.style.scrollMarginTop = "var(--alto-mapa-movil)"; });
+
+/* ============ Visor de fotos ============ */
+
+const visor = $("visor");
+function abrirVisor(nombre, alt) {
+  const imagen = visor.querySelector("img");
+  imagen.src = rutaFoto(nombre);
+  imagen.alt = alt;
+  visor.showModal();
+}
+visor.addEventListener("click", () => visor.close());
+
+/* ============ Confeti ============ */
+
+const lienzo = $("confeti");
+const pincel = lienzo.getContext("2d");
+const COLORES_CONFETI = ["#ffffff", "#8fbdea", "#2f6fd0", "#cfe3f8", "#5c97e0"];
+let papelitos = [], animando = false;
+
+function lanzarConfeti() {
+  if (sinAnimacion) return;
+  lienzo.width = innerWidth * devicePixelRatio;
+  lienzo.height = innerHeight * devicePixelRatio;
+  pincel.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  for (let i = 0; i < 160; i++) {
+    papelitos.push({
+      x: innerWidth / 2 + (Math.random() - .5) * innerWidth * .5,
+      y: innerHeight * .35,
+      vx: (Math.random() - .5) * 14,
+      vy: -Math.random() * 13 - 3,
+      lado: 5 + Math.random() * 7,
+      giro: Math.random() * Math.PI,
+      vgiro: (Math.random() - .5) * .3,
+      color: COLORES_CONFETI[i % COLORES_CONFETI.length],
+      redondo: i % 4 === 0,
+    });
+  }
+  if (!animando) { animando = true; requestAnimationFrame(dibujarConfeti); }
+}
+
+function dibujarConfeti() {
+  pincel.clearRect(0, 0, innerWidth, innerHeight);
+  papelitos = papelitos.filter((p) => p.y < innerHeight + 20);
+  for (const p of papelitos) {
+    p.vy += .28; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.giro += p.vgiro;
+    pincel.save();
+    pincel.translate(p.x, p.y);
+    pincel.rotate(p.giro);
+    pincel.fillStyle = p.color;
+    if (p.redondo) { pincel.beginPath(); pincel.arc(0, 0, p.lado / 2, 0, Math.PI * 2); pincel.fill(); }
+    else pincel.fillRect(-p.lado / 2, -p.lado / 4, p.lado, p.lado / 2);
+    pincel.restore();
+  }
+  if (papelitos.length) requestAnimationFrame(dibujarConfeti);
+  else animando = false;
+}
+
+$("celebrar").addEventListener("click", lanzarConfeti);
+new IntersectionObserver((entradas, obs) => {
+  if (entradas[0].isIntersecting) { lanzarConfeti(); obs.disconnect(); }
+}, { threshold: .45 }).observe($("cierre"));
+</script>
+</body>
+</html>
