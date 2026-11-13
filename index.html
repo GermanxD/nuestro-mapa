@@ -81,7 +81,8 @@
     box-shadow: 0 1px 2px rgba(20, 49, 95, .12), 0 14px 34px rgba(20, 49, 95, .16);
     font: inherit; text-align: center; cursor: zoom-in;
   }
-  .polaroid img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: var(--nube); }
+  .polaroid img, .polaroid video { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: var(--nube); }
+  .polaroid--video { cursor: default; }
 
   /* Recorrido */
   .entrada { padding: 110px 20px 70px; text-align: center; }
@@ -217,7 +218,7 @@ const MOMENTOS = [
   { fecha: "2026-10-25", coords: [25.676061, -100.324905], titulo: "Un mes y pan de muerto",
     fotos: ["IMG_4106", "IMG_4074", "IMG_4063", "IMG_4086"] },
   { fecha: "2026-10-25", coords: [25.681778, -100.281905], lugar: "Parque Fundidora", titulo: "Flores y un delfín",
-    fotos: ["IMG_4126", "fred", "IMG_4135"] },
+    fotos: ["IMG_4126", "fred", "IMG_4135"], videos: ["IMG_4161"] },
   { fecha: "2026-10-27", coords: [25.735746, -100.296403], titulo: "Noche de octubre",
     fotos: ["IMG_4194"] },
   { fecha: "2026-11-02", coords: [25.674758, -100.364945], titulo: "Dos perezosos",
@@ -228,6 +229,8 @@ const MOMENTOS = [
     fotos: ["IMG_4396"] },
   { fecha: "2026-11-07", coords: [25.665933, -100.308266], titulo: "Tu sonrisa",
     fotos: ["IMG_4427", "IMG_4441"] },
+  { fecha: "2026-11-07", coords: [25.678500, -100.282300], lugar: "Parque Fundidora", titulo: "Tarde en Fundidora",
+    fotos: [], videos: ["IMG_4474"] },
   { fecha: "2026-11-08", coords: [25.774278, -100.320008], titulo: "Frente al espejo",
     fotos: ["IMG_4536"] },
 ];
@@ -251,6 +254,13 @@ function crearPolaroid(nombre, alt) {
   return boton;
 }
 
+function crearPolaroidDeVideo(nombre) {
+  const marco = document.createElement("div");
+  marco.className = "polaroid polaroid--video";
+  marco.innerHTML = `<video src="videos/${nombre}.mp4" poster="videos/${nombre}.jpg" controls playsinline preload="none"></video>`;
+  return marco;
+}
+
 /* ============ Portada ============ */
 
 $("nombre").textContent = PAREJA.nombre;
@@ -269,8 +279,10 @@ const tarjetas = MOMENTOS.map((momento, i) => {
     <div class="momento__num">${momento.inicio ? "♥" : String(i + 1).padStart(2, "0")}</div>
     <p class="momento__fecha">${fechaLarga(momento.fecha)}${lugar}</p>`;
   const galeria = document.createElement("div");
-  galeria.className = "galeria" + (momento.fotos.length === 1 ? " galeria--una" : "");
+  const videos = momento.videos || [];
+  galeria.className = "galeria" + (momento.fotos.length + videos.length === 1 ? " galeria--una" : "");
   momento.fotos.forEach((nombre) => galeria.append(crearPolaroid(nombre, momento.titulo)));
+  videos.forEach((nombre) => galeria.append(crearPolaroidDeVideo(nombre)));
   tarjeta.append(galeria);
   $("momentos").append(tarjeta);
   return tarjeta;

@@ -5,7 +5,7 @@ Página de regalo por su cumpleaños 25 (13 de noviembre de 2026): un recorrido 
 
 ## Alcance
 - Incluye: portada, recorrido con mapa y fotos, contador de días, mensaje final con confeti.
-- Fuente de fotos: solo `Desktop/fotos/fotos2` (41 HEIC, todas con GPS). Los videos `.mov` quedan fuera.
+- Fuente de fotos: solo `Desktop/fotos/fotos2` (41 HEIC, todas con GPS). Dos videos de `Desktop/fotos` se incluyen convertidos a MP4.
 - Fuera de alcance: publicación en internet, música, edición de textos desde la página.
 
 ## Flujo
@@ -22,7 +22,7 @@ Página de regalo por su cumpleaños 25 (13 de noviembre de 2026): un recorrido 
 - Momentos en el mismo lugar: el pin activo queda encima.
 
 ## Criterios de aceptación
-- Los 15 momentos aparecen en orden cronológico con fecha local de Monterrey y pin en su coordenada real.
+- Los 16 momentos aparecen en orden cronológico con fecha local de Monterrey y pin en su coordenada real.
 - Al llegar a cada momento con scroll, el mapa se centra en su pin; tocar un pin lleva a su tarjeta.
 - Paleta blanca y azul; se ve bien a 375 px y en escritorio, sin scroll horizontal.
 - Nombre, títulos y frases se cambian en un solo bloque de datos al inicio del script.
